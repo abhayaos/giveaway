@@ -33,7 +33,7 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/auth/login', {
+      const res = await fetch('https://backend-giveaway.vercel.app/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -63,7 +63,7 @@ export function AuthProvider({ children }) {
   const register = async (name, email, password, phone, referredBy = null) => {
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/auth/register', {
+      const res = await fetch('https://backend-giveaway.vercel.app/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -102,7 +102,7 @@ export function AuthProvider({ children }) {
       const token = localStorage.getItem('token');
       if (!token) return null;
       
-      const response = await fetch('http://localhost:5000/api/auth/profile', {
+      const response = await fetch('https://backend-giveaway.vercel.app/api/auth/profile', {
         headers: {
           'x-auth-token': token,
         },

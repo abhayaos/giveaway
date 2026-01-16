@@ -11,36 +11,24 @@ function Profile() {
 
   useEffect(() => {
     const fetchUserProfile = async () => {
-      if (!currentUser) return;
-      
-      try {
-        // Try to fetch from backend first
-        const response = await fetch(`http://localhost:5000/api/users/${currentUser.id}`, {
-          headers: {
-            'x-auth-token': localStorage.getItem('token'),
-          },
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          setUserData(data);
-        } else {
-          // Fallback to local storage data
-          const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-          setUserData(storedUser);
+      if (currentUser) {
+        try {
+          const response = await fetch(`https://backend-giveaway.vercel.app/api/users/${currentUser.id}`, {
+            headers: {
+              'x-auth-token': localStorage.getItem('token'),
+            },
+          });
+
+          if (response.ok) {
+            const userData = await response.json();
+            setUserProfile(userData);
+          }
+        } catch (err) {
+          console.error('Error fetching user profile:', err);
         }
-      } catch (err) {
-        // Fallback to local storage data on error
-        const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
-        setUserData(storedUser);
-        console.error('Error fetching user profile:', err);
-        // Optionally show a warning about using cached data
-        // setError('Using cached profile data');
-      } finally {
-        setLoading(false);
       }
     };
-    
+
     fetchUserProfile();
   }, [currentUser]);
 

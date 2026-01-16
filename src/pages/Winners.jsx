@@ -10,30 +10,16 @@ function Winners() {
   useEffect(() => {
     const fetchWinners = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/winners/recent');
+        const response = await fetch('https://backend-giveaway.vercel.app/api/winners/recent');
         if (response.ok) {
           const data = await response.json();
-          // Transform the data to match our UI expectations
-          const transformedWinners = data.map((winner, index) => ({
-            id: winner._id || index,
-            name: winner.userId?.name || 'Anonymous Winner',
-            prize: winner.giveawayId?.prizeName || 'Special Prize',
-            date: winner.createdAt || new Date().toISOString().split('T')[0],
-            avatar: `https://randomuser.me/api/portraits/${index % 2 === 0 ? 'men' : 'women'}/${Math.floor(Math.random() * 100)}.jpg`,
-            giveaway: winner.giveawayId?.title || 'Unknown Giveaway'
-          }));
-          setWinners(transformedWinners);
-        } else {
-          throw new Error('Failed to fetch winners');
+          setWinners(data);
         }
       } catch (err) {
-        setError('Failed to load winners. Please try again later.');
         console.error('Error fetching winners:', err);
-      } finally {
-        setLoading(false);
       }
     };
-    
+
     fetchWinners();
   }, []);
 

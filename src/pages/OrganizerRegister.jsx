@@ -41,56 +41,39 @@ function OrganizerRegister() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     setError('');
     
-    // Validation
-    if (!formData.name || !formData.email || !formData.phone || !formData.password) {
-      setError('Please fill in all required fields');
-      return;
-    }
-    
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-    
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return;
-    }
-    
-    setLoading(true);
     try {
-      const response = await fetch('http://localhost:5000/api/organizers/register', {
+      const response = await fetch('https://backend-giveaway.vercel.app/api/organizers/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-auth-token': localStorage.getItem('token'),
         },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-          phone: formData.phone
-        }),
+        body: JSON.stringify(formData),
       });
       
       const data = await response.json();
       
       if (response.ok) {
-        setSuccess(true);
-        // Clear form
+        setMessage('Registration submitted successfully! Please wait for admin approval.');
         setFormData({
-          name: '',
-          email: '',
-          phone: '',
-          password: '',
-          confirmPassword: ''
+          businessName: '',
+          businessDescription: '',
+          businessType: '',
+          website: '',
+          socialMedia: '',
+          contactPerson: '',
+          contactEmail: '',
+          contactPhone: '',
+          businessAddress: '',
         });
       } else {
-        setError(data.msg || 'Registration failed');
+        setError(data.msg || 'Registration failed. Please try again.');
       }
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      setError('Network error. Please try again.');
     } finally {
       setLoading(false);
     }

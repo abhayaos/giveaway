@@ -27,162 +27,171 @@ function AdminDashboard() {
   }, []);
 
   useEffect(() => {
-    // Load admin dashboard data
-    fetchDashboardData();
+    const fetchStats = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const statsResponse = await fetch('https://backend-giveaway.vercel.app/api/admin/stats', {
+          headers: {
+            'x-auth-token': token,
+          },
+        });
+
+        if (statsResponse.ok) {
+          const statsData = await statsResponse.json();
+          setStats(statsData);
+        }
+
+        const orgResponse = await fetch('https://backend-giveaway.vercel.app/api/organizers', {
+          headers: {
+            'x-auth-token': token,
+          },
+        });
+
+        if (orgResponse.ok) {
+          const orgData = await orgResponse.json();
+          setOrganizers(orgData);
+        }
+
+        const giveawayResponse = await fetch('https://backend-giveaway.vercel.app/api/giveaways', {
+          headers: {
+            'x-auth-token': token,
+          },
+        });
+
+        if (giveawayResponse.ok) {
+          const giveawayData = await giveawayResponse.json();
+          setGiveaways(giveawayData);
+        }
+
+        const winnersResponse = await fetch('https://backend-giveaway.vercel.app/api/admin/winners', {
+          headers: {
+            'x-auth-token': token,
+          },
+        });
+
+        if (winnersResponse.ok) {
+          const winnersData = await winnersResponse.json();
+          setWinners(winnersData);
+        }
+      } catch (err) {
+        console.error('Error fetching data:', err);
+      }
+    };
+
+    fetchStats();
   }, []);
 
-  const fetchDashboardData = async () => {
-    try {
-      const token = localStorage.getItem('adminToken');
-      if (!token) {
-        // Redirect to admin login
-        window.location.href = '/admin-login';
-        return;
-      }
+  const handleSelectWinners = async (giveawayId) => {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`https://backend-giveaway.vercel.app/api/winners/select/${giveawayId}`, {
+      method: 'POST',
+      headers: {
+        'x-auth-token': token,
+      },
+      body: JSON.stringify({ giveawayId }),
+    });
 
-      // Fetch stats
-      const statsResponse = await fetch('http://localhost:5000/api/admin/stats', {
+    if (response.ok) {
+      const result = await response.json();
+      alert(`Selected ${result.winners.length} winners!`);
+      // Refresh the data
+      const giveawayResponse = await fetch('https://backend-giveaway.vercel.app/api/giveaways', {
         headers: {
-          'x-auth-token': token,
+          'x-auth-token': localStorage.getItem('token'),
         },
       });
-      
-      if (statsResponse.ok) {
-        const statsData = await statsResponse.json();
-        setStats(statsData);
-      }
 
-      // Fetch organizers
-      const orgResponse = await fetch('http://localhost:5000/api/organizers', {
-        headers: {
-          'x-auth-token': token,
-        },
-      });
-      
-      if (orgResponse.ok) {
-        const orgData = await orgResponse.json();
-        setOrganizers(orgData);
-      }
-
-      // Fetch giveaways
-      const giveawayResponse = await fetch('http://localhost:5000/api/giveaways', {
-        headers: {
-          'x-auth-token': token,
-        },
-      });
-      
       if (giveawayResponse.ok) {
         const giveawayData = await giveawayResponse.json();
         setGiveaways(giveawayData);
       }
-      
-      // Fetch winners
-      const winnersResponse = await fetch('http://localhost:5000/api/admin/winners', {
-        headers: {
-          'x-auth-token': token,
-        },
-      });
-      
-      if (winnersResponse.ok) {
-        const winnersData = await winnersResponse.json();
-        setWinners(winnersData);
-      }
-    } catch (err) {
-      console.error('Error fetching dashboard data:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  const selectWinner = async (giveawayId) => {
-    if (!window.confirm('Are you sure you want to select a winner for this giveaway? This action cannot be undone.')) {
-      return;
-    }
-    
-    try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`http://localhost:5000/api/winners/select/${giveawayId}`, {
-        method: 'POST',
-        headers: {
-          'x-auth-token': token,
-        },
-      });
-      
-      const result = await response.json();
-      
-      if (response.ok) {
-        alert(`Winner selected: ${result.winner.name}`);
-        fetchDashboardData(); // Refresh data
-      } else {
-        alert(result.msg || 'Error selecting winner');
-      }
-    } catch (err) {
-      console.error('Error selecting winner:', err);
-      alert('Error selecting winner');
-    }
-  };
-  
-  const completeGiveaway = async (giveawayId) => {
-    if (!window.confirm('Are you sure you want to complete this giveaway? This action cannot be undone.')) {
-      return;
-    }
-    
-    try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`http://localhost:5000/api/winners/complete/${giveawayId}`, {
-        method: 'PUT',
-        headers: {
-          'x-auth-token': token,
-        },
-      });
-      
-      const result = await response.json();
-      
-      if (response.ok) {
-        alert('Giveaway completed successfully');
-        fetchDashboardData(); // Refresh data
-      } else {
-        alert(result.msg || 'Error completing giveaway');
-      }
-    } catch (err) {
-      console.error('Error completing giveaway:', err);
-      alert('Error completing giveaway');
+    } else {
+      const error = await response.json();
+      alert(error.msg || 'Error selecting winners');
     }
   };
 
-  const approveOrganizer = async (id) => {
-    try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`http://localhost:5000/api/organizers/${id}/approve`, {
-        method: 'PUT',
+  const handleCompleteGiveaway = async (giveawayId) => {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`https://backend-giveaway.vercel.app/api/winners/complete/${giveawayId}`, {
+      method: 'POST',
+      headers: {
+        'x-auth-token': token,
+      },
+    });
+
+    if (response.ok) {
+      alert('Giveaway completed successfully!');
+      // Refresh the data
+      const giveawayResponse = await fetch('https://backend-giveaway.vercel.app/api/giveaways', {
         headers: {
-          'x-auth-token': token,
+          'x-auth-token': localStorage.getItem('token'),
         },
       });
 
-      if (response.ok) {
-        fetchDashboardData(); // Refresh data
+      if (giveawayResponse.ok) {
+        const giveawayData = await giveawayResponse.json();
+        setGiveaways(giveawayData);
       }
-    } catch (err) {
-      console.error('Error approving organizer:', err);
+    } else {
+      const error = await response.json();
+      alert(error.msg || 'Error completing giveaway');
     }
   };
 
-  const rejectOrganizer = async (id) => {
-    try {
-      const token = localStorage.getItem('adminToken');
-      const response = await fetch(`http://localhost:5000/api/organizers/${id}/reject`, {
-        method: 'PUT',
+  const handleApproveOrganizer = async (id) => {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`https://backend-giveaway.vercel.app/api/organizers/${id}/approve`, {
+      method: 'PUT',
+      headers: {
+        'x-auth-token': token,
+      },
+    });
+
+    if (response.ok) {
+      alert('Organizer approved successfully!');
+      // Refresh the data
+      const orgResponse = await fetch('https://backend-giveaway.vercel.app/api/organizers', {
         headers: {
-          'x-auth-token': token,
+          'x-auth-token': localStorage.getItem('token'),
         },
       });
 
-      if (response.ok) {
-        fetchDashboardData(); // Refresh data
+      if (orgResponse.ok) {
+        const orgData = await orgResponse.json();
+        setOrganizers(orgData);
       }
-    } catch (err) {
-      console.error('Error rejecting organizer:', err);
+    } else {
+      const error = await response.json();
+      alert(error.msg || 'Error approving organizer');
+    }
+  };
+
+  const handleRejectOrganizer = async (id) => {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`https://backend-giveaway.vercel.app/api/organizers/${id}/reject`, {
+      method: 'PUT',
+      headers: {
+        'x-auth-token': token,
+      },
+    });
+
+    if (response.ok) {
+      alert('Organizer rejected successfully!');
+      // Refresh the data
+      const orgResponse = await fetch('https://backend-giveaway.vercel.app/api/organizers', {
+        headers: {
+          'x-auth-token': localStorage.getItem('token'),
+        },
+      });
+
+      if (orgResponse.ok) {
+        const orgData = await orgResponse.json();
+        setOrganizers(orgData);
+      }
+    } else {
+      const error = await response.json();
+      alert(error.msg || 'Error rejecting organizer');
     }
   };
 
@@ -451,14 +460,14 @@ function AdminDashboard() {
                         {!organizer.isApproved ? (
                           <div className="flex gap-3">
                             <button
-                              onClick={() => approveOrganizer(organizer._id)}
+                              onClick={() => handleApproveOrganizer(organizer._id)}
                               className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-lg transition-colors duration-200"
                               title="Approve"
                             >
                               <CheckCircle size={20} />
                             </button>
                             <button
-                              onClick={() => rejectOrganizer(organizer._id)}
+                              onClick={() => handleRejectOrganizer(organizer._id)}
                               className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors duration-200"
                               title="Reject"
                             >
@@ -522,7 +531,7 @@ function AdminDashboard() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
-                          onClick={() => selectWinner(giveaway._id)}
+                          onClick={() => handleSelectWinners(giveaway._id)}
                           className="px-3 py-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors duration-200 mr-2"
                           disabled={!giveaway.isActive || giveaway.hasWinner}
                           title="Select Winner"
@@ -530,7 +539,7 @@ function AdminDashboard() {
                           Select Winner
                         </button>
                         <button
-                          onClick={() => completeGiveaway(giveaway._id)}
+                          onClick={() => handleCompleteGiveaway(giveaway._id)}
                           className="px-3 py-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-lg transition-colors duration-200"
                           disabled={!giveaway.isActive}
                           title="Complete Giveaway"

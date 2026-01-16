@@ -13,17 +13,16 @@ function Participants() {
   useEffect(() => {
     const fetchGiveaways = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/giveaways/active');
-        const data = await response.json();
-        setGiveaways(data);
+        const response = await fetch('https://backend-giveaway.vercel.app/api/giveaways/active');
+        if (response.ok) {
+          const data = await response.json();
+          setGiveaways(data);
+        }
       } catch (err) {
-        setError('Failed to load giveaways');
         console.error('Error fetching giveaways:', err);
-      } finally {
-        setLoading(false);
       }
     };
-    
+
     fetchGiveaways();
   }, []);
   

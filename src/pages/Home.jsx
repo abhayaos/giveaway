@@ -16,71 +16,20 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchRecentWinners = async () => {
-    try {
-      setError(null);
-      const response = await fetch('http://localhost:5000/api/winners/recent');
-      if (response.ok) {
-        const data = await response.json();
-        // Transform data to match the existing UI structure
-        const transformedWinners = data.slice(0, 3).map((winner, index) => ({
-          id: winner._id || index,
-          name: winner.userId?.name || 'Anonymous Winner',
-          prize: winner.giveawayId?.prizeName || 'Special Prize',
-          value: winner.giveawayId?.prizeValue 
-            ? `Rs ${winner.giveawayId.prizeValue.toLocaleString()} value`
-            : 'Premium prize',
-          date: formatDate(winner.createdAt),
-          claimed: winner.isClaimed || false
-        }));
-        setRecentWinners(transformedWinners);
-      } else {
-        throw new Error('Failed to fetch winners');
-      }
-    } catch (err) {
-      console.error('Error fetching recent winners:', err);
-      setError('Unable to load recent winners. Showing sample data.');
-      // Fallback to mock data if API fails
-      setRecentWinners([
-        {
-          id: 'mock1',
-          name: "Aashish Kumar",
-          prize: "Advanced Web Development Course",
-          value: "Rs 499 value",
-          date: "2 days ago",
-          claimed: true
-        },
-        {
-          id: 'mock2',
-          name: "Nisha Sharma",
-          prize: "Canva Pro Annual Subscription",
-          value: "Rs 119 value",
-          date: "1 week ago",
-          claimed: true
-        },
-        {
-          id: 'mock3',
-          name: "Bibek Thapa",
-          prize: "Premium UI Design Template Pack",
-          value: "Rs 299 value",
-          date: "2 weeks ago",
-          claimed: true
-        }
-      ]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    // Initial fetch
+    const fetchRecentWinners = async () => {
+      try {
+        const response = await fetch('https://backend-giveaway.vercel.app/api/winners/recent');
+        if (response.ok) {
+          const data = await response.json();
+          setRecentWinners(data);
+        }
+      } catch (err) {
+        console.error('Error fetching recent winners:', err);
+      }
+    };
+
     fetchRecentWinners();
-    
-    // Set up auto-refresh every 30 seconds to check for new winners
-    const interval = setInterval(fetchRecentWinners, 30000);
-    
-    // Cleanup interval on component unmount
-    return () => clearInterval(interval);
   }, []);
 
   const formatDate = (dateString) => {

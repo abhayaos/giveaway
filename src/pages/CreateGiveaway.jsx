@@ -60,7 +60,7 @@ function CreateGiveaway() {
       // Get the organizer's token from localStorage
       const token = localStorage.getItem('token');
       
-      const response = await fetch('http://localhost:5000/api/giveaways', {
+      const response = await fetch('https://backend-giveaway.vercel.app/api/giveaways', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -32,7 +32,7 @@ function PrivilegePage() {
         if (id) {
           // If id is provided, try to fetch the specific entry first
           console.log("Fetching specific entry with ID:", id); // Debug log
-          const entryResponse = await fetch(`http://localhost:5000/api/participants/entry/${id}`, {
+          const entryResponse = await fetch(`https://backend-giveaway.vercel.app/api/participants/entry/${id}`, {
             headers: {
               'x-auth-token': token,
             },
@@ -46,7 +46,7 @@ function PrivilegePage() {
             setShowAllEntries(false);
             
             // Also fetch all entries for the "View All Entries" functionality
-            const allEntriesResponse = await fetch('http://localhost:5000/api/participants/user', {
+            const allEntriesResponse = await fetch('https://backend-giveaway.vercel.app/api/participants/user', {
               headers: {
                 'x-auth-token': token,
               },
@@ -65,7 +65,7 @@ function PrivilegePage() {
             // If the id is not found as a participant entry ID, treat it as a giveaway ID
             // and look for entries related to that giveaway
             console.log("Specific entry not found, fetching all entries to search for giveaway ID:", id); // Debug log
-            const participantsResponse = await fetch('http://localhost:5000/api/participants/user', {
+            const participantsResponse = await fetch('https://backend-giveaway.vercel.app/api/participants/user', {
               headers: {
                 'x-auth-token': token,
               },
@@ -97,7 +97,7 @@ function PrivilegePage() {
           console.log("Fetching all entries for user"); // Debug log
           
           // Let's also try to fetch all participants to see if there's a mismatch
-          const allParticipantsResponse = await fetch('http://localhost:5000/api/participants', {
+          const allParticipantsResponse = await fetch('https://backend-giveaway.vercel.app/api/participants', {
             headers: {
               'x-auth-token': token,
             },
@@ -124,7 +124,7 @@ function PrivilegePage() {
             console.log("Entries for current user from all participants:", userEntries);
           }
           
-          const participantsResponse = await fetch('http://localhost:5000/api/participants/user', {
+          const participantsResponse = await fetch('https://backend-giveaway.vercel.app/api/participants/user', {
             headers: {
               'x-auth-token': token,
             },

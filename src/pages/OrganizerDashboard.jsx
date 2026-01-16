@@ -14,6 +14,49 @@ function OrganizerDashboard() {
   const isApproved = user.isApproved;
 
   useEffect(() => {
+    const fetchGiveaways = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('https://backend-giveaway.vercel.app/api/giveaways', {
+          headers: {
+            'x-auth-token': token,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          // Filter giveaways to show only those created by the current organizer
+          const user = JSON.parse(localStorage.getItem('user'));
+          const userGiveaways = data.filter(giveaway => giveaway.createdBy._id === user._id);
+          setGiveaways(userGiveaways);
+        }
+      } catch (err) {
+        console.error('Error fetching giveaways:', err);
+      }
+    };
+
+    fetchGiveaways();
+  }, []);
+
+  const handleEdit = async (id) => {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`https://backend-giveaway.vercel.app/api/giveaways/${id}`, {
+      method: 'PUT',
+      headers: {
+        'x-auth-token': token,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ status: 'draft' }), // Example update
+    });
+
+    if (response.ok) {
+      const updatedGiveaway = await response.json();
+      // Update local state
+      setGiveaways(prev => prev.map(g => g._id === id ? updatedGiveaway : g));
+    }
+  };
+
+  useEffect(() => {
     fetchOrganizerGiveaways();
     
     // Set up interval to check for approval status changes if not approved
@@ -244,6 +287,13 @@ function OrganizerDashboard() {
                   </span>
                   
                   <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEdit(giveaway._id)}
+                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      title="Edit Giveaway"
+                    >
+                      <Edit size={16} />
+                    </button>
                     <button
                       onClick={() => deleteGiveaway(giveaway._id)}
                       className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"

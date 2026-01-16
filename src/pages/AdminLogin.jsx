@@ -23,34 +23,27 @@ function AdminLogin() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    
-    if (!formData.email || !formData.password) {
-      setError('Please fill in all fields');
-      return;
-    }
-    
     setLoading(true);
+    setError('');
+
     try {
-      // Admin login API call would go here
-      // For now, simulate admin login
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      const response = await fetch('https://backend-giveaway.vercel.app/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email: formData.email, password: formData.password }),
+        body: JSON.stringify({ email, password }),
       });
-      
+
       const data = await response.json();
-      
-      if (response.ok && data.user?.role === 'admin') {
-        // Store admin token and redirect
-        localStorage.setItem('adminToken', data.token);
-        localStorage.setItem('adminUser', JSON.stringify(data.user));
-        navigate('/admin');
+
+      if (response.ok) {
+        // Store token and redirect
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        navigate('/admin-dashboard');
       } else {
-        setError(data.msg || 'Admin access denied');
+        setError(data.msg || 'Invalid credentials');
       }
     } catch (err) {
       setError('An error occurred. Please try again.');

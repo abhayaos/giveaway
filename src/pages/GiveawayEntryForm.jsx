@@ -47,7 +47,7 @@ function GiveawayEntryForm() {
     setLoading(true);
     
     try {
-      const response = await fetch('http://localhost:5000/api/participants', {
+      const response = await fetch('https://backend-giveaway.vercel.app/api/participants', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

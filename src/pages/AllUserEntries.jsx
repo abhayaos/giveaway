@@ -24,7 +24,7 @@ function AllUserEntries() {
           return;
         }
 
-        const response = await fetch('http://localhost:5000/api/participants/all', {
+        const response = await fetch('https://backend-giveaway.vercel.app/api/participants/all', {
           headers: {
             'x-auth-token': token
           }
