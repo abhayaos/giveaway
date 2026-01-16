@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import api from '../services/api';
 import { User, Phone, MapPin, MessageSquare, Gift, CheckCircle, ArrowLeft, Share2, Calendar, ChevronRight, Award } from 'lucide-react';
 import { WhatsappLogo } from 'phosphor-react';
 
@@ -32,47 +33,26 @@ function PrivilegePage() {
         if (id) {
           // If id is provided, try to fetch the specific entry first
           console.log("Fetching specific entry with ID:", id); // Debug log
-          const entryResponse = await fetch(`https://backend-giveaway.vercel.app/api/participants/entry/${id}`, {
-            headers: {
-              'x-auth-token': token,
-            },
-          });
-          
-          if (entryResponse.ok) {
-            // Successfully fetched a specific entry
-            const entry = await entryResponse.json();
+          try {
+            // Attempt to fetch the specific entry by ID
+            const entryResponse = await api.get(`/participants/entry/${id}`);
+            const entry = entryResponse.data;
             console.log("Fetched specific entry:", entry); // Debug log
             setSelectedEntry(entry);
             setShowAllEntries(false);
             
             // Also fetch all entries for the "View All Entries" functionality
-            const allEntriesResponse = await fetch('https://backend-giveaway.vercel.app/api/participants/user', {
-              headers: {
-                'x-auth-token': token,
-              },
-            });
-            
-            if (allEntriesResponse.ok) {
-              const participants = await allEntriesResponse.json();
-              console.log("Fetched all entries for allEntriesResponse:", participants); // Debug log
-              const sortedEntries = participants.sort((a, b) => new Date(b.enteredAt) - new Date(a.enteredAt));
-              setAllEntries(sortedEntries);
-            } else {
-              // Even if fetching all entries fails, we can still show the specific entry
-              console.error('Failed to fetch all entries:', await allEntriesResponse.text());
-            }
-          } else {
-            // If the id is not found as a participant entry ID, treat it as a giveaway ID
-            // and look for entries related to that giveaway
+            const allEntriesResponse = await api.get('/participants/user');
+            const allParticipants = allEntriesResponse.data;
+            console.log("Fetched all entries for allEntriesResponse:", allParticipants); // Debug log
+            const sortedEntries = allParticipants.sort((a, b) => new Date(b.enteredAt) - new Date(a.enteredAt));
+            setAllEntries(sortedEntries);
+          } catch (error) {
             console.log("Specific entry not found, fetching all entries to search for giveaway ID:", id); // Debug log
-            const participantsResponse = await fetch('https://backend-giveaway.vercel.app/api/participants/user', {
-              headers: {
-                'x-auth-token': token,
-              },
-            });
-            
-            if (participantsResponse.ok) {
-              const participants = await participantsResponse.json();
+            // If specific entry not found, fetch all entries and look for matching giveaway
+            try {
+              const participantsResponse = await api.get('/participants/user');
+              const participants = participantsResponse.data;
               console.log("Fetched all entries for participantsResponse:", participants); // Debug log
               
               // Sort entries by date (newest first)
@@ -87,9 +67,8 @@ function PrivilegePage() {
               } else {
                 setError('Entry not found');
               }
-            } else {
-              const errorData = await participantsResponse.json();
-              setError(errorData.msg || 'Failed to load entries');
+            } catch (error) {
+              setError(error.response?.data?.msg || 'Failed to load entries');
             }
           }
         } else {
@@ -97,14 +76,9 @@ function PrivilegePage() {
           console.log("Fetching all entries for user"); // Debug log
           
           // Let's also try to fetch all participants to see if there's a mismatch
-          const allParticipantsResponse = await fetch('https://backend-giveaway.vercel.app/api/participants', {
-            headers: {
-              'x-auth-token': token,
-            },
-          });
-          
-          if (allParticipantsResponse.ok) {
-            const allParticipants = await allParticipantsResponse.json();
+          try {
+            const allParticipantsResponse = await api.get('/participants');
+            const allParticipants = allParticipantsResponse.data;
             console.log("All participants in system:", allParticipants);
             
             // Get current user ID from localStorage
@@ -122,16 +96,14 @@ function PrivilegePage() {
             // Filter for current user's entries
             const userEntries = allParticipants.filter(entry => entry.userId?._id === currentUserId);
             console.log("Entries for current user from all participants:", userEntries);
+          } catch (error) {
+            console.error('Error fetching all participants:', error);
           }
           
-          const participantsResponse = await fetch('https://backend-giveaway.vercel.app/api/participants/user', {
-            headers: {
-              'x-auth-token': token,
-            },
-          });
-          
-          if (participantsResponse.ok) {
-            const participants = await participantsResponse.json();
+          // Fetch user's specific entries
+          try {
+            const participantsResponse = await api.get('/participants/user');
+            const participants = participantsResponse.data;
             
             // Sort entries by date (newest first)
             const sortedEntries = participants.sort((a, b) => new Date(b.enteredAt) - new Date(a.enteredAt));
@@ -143,10 +115,8 @@ function PrivilegePage() {
             // DEBUG: Log the response to see what's happening
             console.log("Fetched entries:", participants);
             console.log("Number of entries:", participants.length);
-          } else {
-            const errorData = await participantsResponse.json();
-            console.error("Error response from /api/participants/user:", errorData);
-            setError(errorData.msg || 'Failed to load entries');
+          } catch (error) {
+            setError(error.response?.data?.msg || 'Failed to load entries');
           }
         }
       } catch (err) {
@@ -462,7 +432,7 @@ Entry ID: ${entry?._id}`;
               <WhatsappLogo size={24} weight="fill" />
               Message on WhatsApp
             </button>
-              
+            
             <button
               onClick={handleCopyInfo}
               className="flex items-center justify-center gap-3 bg-gray-600 hover:bg-gray-700 text-white py-4 px-6 rounded-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
@@ -470,7 +440,7 @@ Entry ID: ${entry?._id}`;
               <Share2 size={24} />
               Copy Entry Details
             </button>
-              
+            
             <button
               onClick={() => navigate('/abhaya/privilege')}
               className="flex items-center justify-center gap-3 bg-blue-600 hover:bg-blue-700 text-white py-4 px-6 rounded-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import api from '../services/api';
 import { Users, Trophy, Gift, Eye, CheckCircle, XCircle, BarChart3, Calendar, LogOut } from 'lucide-react';
 
 function AdminDashboard() {
@@ -30,49 +31,21 @@ function AdminDashboard() {
     const fetchStats = async () => {
       try {
         const token = localStorage.getItem('token');
-        const statsResponse = await fetch('https://backend-giveaway.vercel.app/api/admin/stats', {
-          headers: {
-            'x-auth-token': token,
-          },
-        });
-
-        if (statsResponse.ok) {
-          const statsData = await statsResponse.json();
-          setStats(statsData);
-        }
-
-        const orgResponse = await fetch('https://backend-giveaway.vercel.app/api/organizers', {
-          headers: {
-            'x-auth-token': token,
-          },
-        });
-
-        if (orgResponse.ok) {
-          const orgData = await orgResponse.json();
-          setOrganizers(orgData);
-        }
-
-        const giveawayResponse = await fetch('https://backend-giveaway.vercel.app/api/giveaways', {
-          headers: {
-            'x-auth-token': token,
-          },
-        });
-
-        if (giveawayResponse.ok) {
-          const giveawayData = await giveawayResponse.json();
-          setGiveaways(giveawayData);
-        }
-
-        const winnersResponse = await fetch('https://backend-giveaway.vercel.app/api/admin/winners', {
-          headers: {
-            'x-auth-token': token,
-          },
-        });
-
-        if (winnersResponse.ok) {
-          const winnersData = await winnersResponse.json();
-          setWinners(winnersData);
-        }
+        const statsResponse = await api.get('/admin/stats');
+        const statsData = statsResponse.data;
+        setStats(statsData);
+        
+        const orgResponse = await api.get('/organizers');
+        const orgData = orgResponse.data;
+        setOrganizers(orgData);
+        
+        const giveawayResponse = await api.get('/giveaways');
+        const giveawayData = giveawayResponse.data;
+        setGiveaways(giveawayData);
+        
+        const winnersResponse = await api.get('/admin/winners');
+        const winnersData = winnersResponse.data;
+        setWinners(winnersData);
       } catch (err) {
         console.error('Error fetching data:', err);
       }
@@ -82,32 +55,17 @@ function AdminDashboard() {
   }, []);
 
   const handleSelectWinners = async (giveawayId) => {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`https://backend-giveaway.vercel.app/api/winners/select/${giveawayId}`, {
-      method: 'POST',
-      headers: {
-        'x-auth-token': token,
-      },
-      body: JSON.stringify({ giveawayId }),
-    });
+    try {
+      const response = await api.post(`/winners/select/${giveawayId}`, { giveawayId });
 
-    if (response.ok) {
-      const result = await response.json();
-      alert(`Selected ${result.winners.length} winners!`);
-      // Refresh the data
-      const giveawayResponse = await fetch('https://backend-giveaway.vercel.app/api/giveaways', {
-        headers: {
-          'x-auth-token': localStorage.getItem('token'),
-        },
-      });
-
-      if (giveawayResponse.ok) {
-        const giveawayData = await giveawayResponse.json();
-        setGiveaways(giveawayData);
+      if (response.data) {
+        alert(`Selected ${response.data.winners.length} winners!`);
+        // Refresh the data
+        const giveawayResponse = await api.get('/giveaways');
+        setGiveaways(giveawayResponse.data);
       }
-    } else {
-      const error = await response.json();
-      alert(error.msg || 'Error selecting winners');
+    } catch (error) {
+      alert(error.response?.data?.msg || 'Error selecting winners');
     }
   };
 

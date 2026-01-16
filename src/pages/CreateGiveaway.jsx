@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Plus, Image, Upload, Calendar, Users, Clock } from 'lucide-react';
+import api from '../services/api';
 
 function CreateGiveaway() {
   const [formData, setFormData] = useState({
@@ -60,23 +61,14 @@ function CreateGiveaway() {
       // Get the organizer's token from localStorage
       const token = localStorage.getItem('token');
       
-      const response = await fetch('https://backend-giveaway.vercel.app/api/giveaways', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-auth-token': token
-        },
-        body: JSON.stringify({
-          ...formData,
-          prizeValue: parseFloat(formData.prizeValue),
-          maxEntries: parseInt(formData.maxEntries),
-          winnerCount: parseInt(formData.winnerCount)
-        })
+      const response = await api.post('/giveaways', {
+        ...formData,
+        prizeValue: parseFloat(formData.prizeValue),
+        maxEntries: parseInt(formData.maxEntries),
+        winnerCount: parseInt(formData.winnerCount)
       });
       
-      const result = await response.json();
-      
-      if (response.ok) {
+      if (response.data) {
         alert('Giveaway created successfully!');
         // Reset form
         setFormData({
@@ -94,7 +86,7 @@ function CreateGiveaway() {
         });
         setImagePreview(null);
       } else {
-        setError(result.msg || 'Failed to create giveaway');
+        setError(response.data.msg || 'Failed to create giveaway');
       }
     } catch (err) {
       setError('An error occurred while creating the giveaway');

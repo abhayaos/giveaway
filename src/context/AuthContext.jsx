@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
 
 const AuthContext = createContext();
 
@@ -33,28 +34,23 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     setLoading(true);
     try {
-      const res = await fetch('https://backend-giveaway.vercel.app/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const response = await api.post('/auth/login', { email, password });
       
-      const data = await res.json();
-      
-      if (res.ok) {
+      if (response.data) {
         // Save token and user data
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        setCurrentUser(data.user);
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        setCurrentUser(response.data.user);
         navigate('/participants');
         return { success: true };
       } else {
-        return { success: false, error: data.msg || 'Login failed' };
+        return { success: false, error: response.data.msg || 'Login failed' };
       }
     } catch (error) {
-      return { success: false, error: error.message };
+      return { 
+        success: false, 
+        error: error.response?.data?.msg || error.message || 'Login failed' 
+      };
     } finally {
       setLoading(false);
     }
@@ -63,28 +59,29 @@ export function AuthProvider({ children }) {
   const register = async (name, email, password, phone, referredBy = null) => {
     setLoading(true);
     try {
-      const res = await fetch('https://backend-giveaway.vercel.app/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name, email, password, phone, referredBy }),
+      const response = await api.post('/auth/register', { 
+        name, 
+        email, 
+        password, 
+        phone, 
+        referredBy 
       });
       
-      const data = await res.json();
-      
-      if (res.ok) {
+      if (response.data) {
         // Save token and user data
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        setCurrentUser(data.user);
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        setCurrentUser(response.data.user);
         navigate('/participants');
         return { success: true };
       } else {
-        return { success: false, error: data.msg || 'Registration failed' };
+        return { success: false, error: response.data.msg || 'Registration failed' };
       }
     } catch (error) {
-      return { success: false, error: error.message };
+      return { 
+        success: false, 
+        error: error.response?.data?.msg || error.message || 'Registration failed' 
+      };
     } finally {
       setLoading(false);
     }
@@ -99,20 +96,11 @@ export function AuthProvider({ children }) {
 
   const updateUserProfile = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) return null;
-      
-      const response = await fetch('https://backend-giveaway.vercel.app/api/auth/profile', {
-        headers: {
-          'x-auth-token': token,
-        },
-      });
-      
-      if (response.ok) {
-        const userData = await response.json();
-        localStorage.setItem('user', JSON.stringify(userData));
-        setCurrentUser(userData);
-        return userData;
+      const response = await api.get('/auth/profile');
+      if (response.data) {
+        localStorage.setItem('user', JSON.stringify(response.data));
+        setCurrentUser(response.data);
+        return response.data;
       }
     } catch (error) {
       console.error('Error updating user profile:', error);

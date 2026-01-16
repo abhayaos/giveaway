@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { User, Phone, MapPin, MessageSquare, ArrowLeft, Send } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -47,22 +48,13 @@ function GiveawayEntryForm() {
     setLoading(true);
     
     try {
-      const response = await fetch('https://backend-giveaway.vercel.app/api/participants', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-auth-token': localStorage.getItem('token'),
-        },
-        body: JSON.stringify({
-          giveawayId,
-          ...formData,
-          phone: formData.phone.replace(/[-\s]/g, '') // Clean phone number
-        }),
+      const response = await api.post('/participants', {
+        giveawayId,
+        ...formData,
+        phone: formData.phone.replace(/[-\s]/g, '') // Clean phone number
       });
       
-      const data = await response.json();
-      
-      if (response.ok) {
+      if (response.data) {
         setSuccess(true);
         // Redirect to privilege page after 2 seconds
         setTimeout(() => {
@@ -70,10 +62,10 @@ function GiveawayEntryForm() {
           navigate('/abhaya/privilege/');
         }, 2000);
       } else {
-        setError(data.msg || 'Failed to enter giveaway');
+        setError(response.data.msg || 'Failed to enter giveaway');
       }
     } catch (err) {
-      setError('Network error. Please try again.');
+      setError(err.response?.data?.msg || 'Network error. Please try again.');
       console.error('Error submitting form:', err);
     } finally {
       setLoading(false);

@@ -85,7 +85,7 @@ function OrganizerDashboard() {
   const fetchOrganizerGiveaways = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/giveaways', {
+      const response = await fetch('https://backend-giveaway.vercel.app/api/giveaways', {
         headers: {
           'x-auth-token': token,
         },
@@ -116,7 +116,7 @@ function OrganizerDashboard() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/giveaways/${id}`, {
+      const response = await fetch(`https://backend-giveaway.vercel.app/api/giveaways/${id}`, {
         method: 'DELETE',
         headers: {
           'x-auth-token': token,
